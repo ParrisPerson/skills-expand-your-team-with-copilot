@@ -568,6 +568,9 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `
         }
+        <button class="share-button" data-activity="${name}" aria-label="Share activity">
+          🔗 Share
+        </button>
       </div>
     `;
 
@@ -587,7 +590,42 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // Add click handler for share button
+    const shareButton = activityCard.querySelector(".share-button");
+    shareButton.addEventListener("click", () => {
+      shareActivity(name, details);
+    });
+
     activitiesList.appendChild(activityCard);
+  }
+
+  // Share an activity via Web Share API or copy link to clipboard
+  async function shareActivity(name, details) {
+    const formattedSchedule = formatSchedule(details);
+    const shareText = `Activity: ${name}\n${details.description}\nSchedule: ${formattedSchedule}`;
+    const shareUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(name)}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: name,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Error sharing activity:", error);
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        showMessage("Activity information copied! You can now paste it to share.", "success");
+      } catch (error) {
+        console.error("Error copying to clipboard:", error);
+        showMessage("Unable to copy. Please copy the web address from your browser manually.", "error");
+      }
+    }
   }
 
   // Event listeners for search and filter
